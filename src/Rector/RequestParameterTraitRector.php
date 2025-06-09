@@ -40,6 +40,7 @@ class RequestParameterTraitRector extends AbstractRector implements RectorInterf
                         use RequestParameterTrait;
                         public function invoke(Request \$request) {
                             \$this->getRequestParameter(\$request, 'some_prop');
+                            \$this->getRequestParameter(\$request, 'other_prop', force: true);
                         }
                     }
                     CODE_SAMPLE,
@@ -47,6 +48,7 @@ class RequestParameterTraitRector extends AbstractRector implements RectorInterf
                     class Test {
                         public function invoke(Request \$request) {
                             \$request->get('some_prop');
+                            \$request->get('other_prop') ?? throw new InvalidArgumentException('Missing request parameter: "other _prop");
                         }
                     }
                     CODE_SAMPLE
@@ -126,7 +128,7 @@ class RequestParameterTraitRector extends AbstractRector implements RectorInterf
         $force = $arguments['force'];
         Assert::isInstanceOf($force, ConstFetch::class);
 
-        // IF FORCE IS false we can just convert it one to one to a symfony request call.
+        // If "force" is false we can just convert it one to one to a symfony request call.
         if ($this->isName($force->name, 'false')) {
             $methodCall->var = $request;
             $methodCall->name = new Identifier('get');
@@ -136,7 +138,7 @@ class RequestParameterTraitRector extends AbstractRector implements RectorInterf
             return $methodCall;
         }
 
-        // IF FORCE IS false we can just convert it one to one to a symfony request call.
+        // If "force" is true, convert it to a non optional call with exceptions
         if ($this->isName($force->name, 'true')) {
             // We don't want default values for this:
             if ($default instanceof ConstFetch && $this->isName($default->name, 'null')) {
