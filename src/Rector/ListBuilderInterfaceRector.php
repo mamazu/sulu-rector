@@ -51,11 +51,15 @@ class ListBuilderInterfaceRector extends AbstractRector implements RectorInterfa
         return [MethodCall::class];
     }
 
-    public function refactor(Node $node)
+    public function refactor(Node $node): ?Node
     {
         /** @var MethodCall $node */
         $objectType = new ObjectType(ListBuilderInterface::class);
         if (!$this->nodeTypeResolver->isMethodStaticCallOrClassMethodObjectType($node, $objectType)) {
+            return null;
+        }
+
+        if (!$this->isName($node->name, 'whereNot')) {
             return null;
         }
 
@@ -65,6 +69,7 @@ class ListBuilderInterfaceRector extends AbstractRector implements RectorInterfa
                 new Name(['ListBuilderInterface']),
                 new Identifier('WHERE_COMPARATOR_UNEQUAL'),
             ),
+            name: new Identifier('comparator'),
         );
 
         return $node;
